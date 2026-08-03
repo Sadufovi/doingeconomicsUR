@@ -87,7 +87,8 @@ base <- base %>%
   mutate(
     nombre = recode(
       nombre,
-      " Ana María López " = "Ana María López"
+      " Ana María López " = "Ana María López",
+      
       # TODO: agregue aquí el otro nombre que necesita corrección.
       # Recuerde poner una coma al final de la línea anterior.
     )
