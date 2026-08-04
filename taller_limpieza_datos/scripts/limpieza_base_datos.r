@@ -2,7 +2,16 @@
 # Taller de GitHub y limpieza básica de datos con dplyr
 # Archivo: limpieza_base_datos.R
 # -----------------------------------------------------------------------------
+#
+# Objetivo:
+# Observar una base con errores y corregir cada problema de manera explícita
+# usando mutate() y recode().
+#
+# No es necesario construir funciones automáticas.
+# -----------------------------------------------------------------------------#
 
+# Ejecute esta línea una sola vez si no tiene instalado tidyverse:
+# install.packages("tidyverse")
 library(tidyverse)
 
 ruta_entrada <- "../datos/base_sucia_encuesta.txt"
@@ -10,6 +19,9 @@ ruta_salida  <- "../resultados/base_limpia.csv"
 
 
 # 0. Inspección inicial --------------------------------------------------------
+
+# Lea unas pocas líneas sin modificar el archivo.
+# ¿Se ven correctamente las tildes, la ñ y los signos especiales?
 
 lineas_iniciales <- readLines(
   ruta_entrada,
@@ -20,12 +32,24 @@ lineas_iniciales <- readLines(
 print(lineas_iniciales)
 
 # TODO 1:
-# a) Delimitador: ';' (Punto y coma)
-# b) Codificación: "UTF-8"
-# c) Cadenas faltantes: "N/D", "-", ""
+# Identifique:
+# a) el delimitador: ';'
+# b) la codificación del archivo: "UTF-8"
+# c) las cadenas que representan valores perdidos: "N/D", "-", ""
 
 
 # 1. Importar la base ----------------------------------------------------------
+
+
+# TODO 2:
+# Complete la importación.
+#
+# Pistas:
+# - La función read_delim() permite indicar el delimitador.
+# - locale(encoding = "...") permite indicar la codificación.
+# - El argumento na permite definir varias formas de representar faltantes.
+# - Conviene importar inicialmente todas las columnas como texto para evitar
+#   conversiones automáticas incorrectas.
 
 base <- read_delim(
   file = ruta_entrada,
@@ -43,7 +67,21 @@ print(base)
 
 # 2. Corregir los nombres ------------------------------------------------------
 
+# Para limpieza del texto debe:
+# - eliminar espacios al inicio y al final;
+# - estandarizar nombres y ciudades con mayúscula inicial;
+# - estandarizar trabaja como "Sí" o "No".
+#
+# Pistas:
+# - str_squish()
+# - str_to_title()
+# - str_to_lower()
+# - case_when()
+
 unique(base$nombre)
+
+# mutate() modifica o crea columnas.
+# recode() reemplaza valores específicos por otros valores.
 
 base <- base %>%
   mutate(
@@ -83,6 +121,8 @@ base <- base %>%
 
 unique(base$fecha_encuesta)
 
+# Primero, todas las fechas deben quedar escritas como AAAA-MM-DD.
+
 base <- base %>%
   mutate(
     fecha_encuesta = recode(
@@ -97,7 +137,8 @@ base <- base %>%
     )
   )
 
-# Convertir la columna de texto al tipo fecha
+# Después, convierta la columna de texto al tipo fecha.
+
 base <- base %>%
   mutate(
     fecha_encuesta = as.Date(
@@ -110,6 +151,9 @@ base <- base %>%
 # 5. Corregir el ingreso mensual ----------------------------------------------
 
 unique(base$ingreso_mensual)
+
+# Quite manualmente los separadores de miles.
+# Use punto únicamente para separar los decimales.
 
 base <- base %>%
   mutate(
@@ -124,7 +168,8 @@ base <- base %>%
     )
   )
 
-# Convertir la columna de texto a número
+# Convertir la columna de texto a número.
+
 base <- base %>%
   mutate(
     ingreso_mensual = as.numeric(ingreso_mensual)
@@ -134,6 +179,8 @@ base <- base %>%
 # 6. Corregir la nota promedio -------------------------------------------------
 
 unique(base$nota_promedio)
+
+# Todas las notas deben usar punto como separador decimal.
 
 base <- base %>%
   mutate(
@@ -148,7 +195,8 @@ base <- base %>%
     )
   )
 
-# Convertir la columna de texto a número
+# Convertir la columna de texto a número.
+
 base <- base %>%
   mutate(
     nota_promedio = as.numeric(nota_promedio)
@@ -158,6 +206,8 @@ base <- base %>%
 # 7. Corregir la variable trabaja ---------------------------------------------
 
 unique(base$trabaja)
+
+# Todos los valores deben quedar exactamente como "Sí" o "No".
 
 base <- base %>%
   mutate(
@@ -189,6 +239,10 @@ summary(base)
 
 
 # 10. Comprobaciones automáticas ----------------------------------------------
+#
+# Estas líneas fueron preparadas por el profesor.
+# No es necesario modificarlas.
+# Si el trabajo está completo, se ejecutarán sin mostrar errores.
 
 stopifnot(nrow(base) == 7)
 stopifnot(length(unique(base$id)) == 7)
@@ -202,12 +256,12 @@ stopifnot(all(na.omit(base$trabaja) %in% c("Sí", "No")))
 
 # 11. Exportar la base ---------------------------------------------------------
 
-dir.create("resultados", showWarnings = FALSE)
+dir.create(dirname(ruta_salida), showWarnings = FALSE)
 
 write_csv(
   base,
-  "../resultados/base_limpia.csv",
+  ruta_salida,
   na = ""
 )
 
-print("La base limpia fue guardada en resultados/base_limpia.csv")
+print(paste("La base limpia fue guardada en", ruta_salida))
