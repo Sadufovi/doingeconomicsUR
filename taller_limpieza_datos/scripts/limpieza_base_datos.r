@@ -272,4 +272,3 @@ write_csv(
 )
 
 print(paste("La base limpia fue guardada en", ruta_salida))
-
