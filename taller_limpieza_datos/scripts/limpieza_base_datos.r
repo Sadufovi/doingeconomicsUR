@@ -2,16 +2,7 @@
 # Taller de GitHub y limpieza básica de datos con dplyr
 # Archivo: limpieza_base_datos.R
 # -----------------------------------------------------------------------------
-#
-# Objetivo:
-# Observar una base con errores y corregir cada problema de manera explícita
-# usando mutate() y recode().
-#
-# No es necesario construir funciones automáticas.
-# -----------------------------------------------------------------------------#
 
-# Ejecute esta línea una sola vez si no tiene instalado tidyverse:
-# install.packages("tidyverse")
 library(tidyverse)
 
 ruta_entrada <- "datos/base_sucia_encuesta.txt"
@@ -19,9 +10,6 @@ ruta_salida  <- "resultados/base_limpia.csv"
 
 
 # 0. Inspección inicial --------------------------------------------------------
-
-# Lea unas pocas líneas sin modificar el archivo.
-# ¿Se ven correctamente las tildes, la ñ y los signos especiales?
 
 lineas_iniciales <- readLines(
   ruta_entrada,
@@ -31,30 +19,13 @@ lineas_iniciales <- readLines(
 
 print(lineas_iniciales)
 
-# TODO 1:
-# Identifique:
-# a) el delimitador: ';'
-# b) la codificación del archivo: "UTF-8"
-# c) las cadenas que representan valores perdidos: "N/D", "-", ""
-
 
 # 1. Importar la base ----------------------------------------------------------
-
-
-# TODO 2:
-# Complete la importación.
-#
-# Pistas:
-# - La función read_delim() permite indicar el delimitador.
-# - locale(encoding = "...") permite indicar la codificación.
-# - El argumento na permite definir varias formas de representar faltantes.
-# - Conviene importar inicialmente todas las columnas como texto para evitar
-#   conversiones automáticas incorrectas.
 
 base <- read_delim(
   file = ruta_entrada,
   delim = ";",
-  locale = locale(encoding = "UTF-8"),
+  locale = locale(encoding = "ISO-8859-1"),
   na = c("N/D", "-", ""),
   col_types = cols(.default = col_character()),
   trim_ws = FALSE,
@@ -67,50 +38,34 @@ print(base)
 
 # 2. Corregir los nombres ------------------------------------------------------
 
-# Para limpieza del texto debe:
-# - eliminar espacios al inicio y al final;
-# - estandarizar nombres y ciudades con mayúscula inicial;
-# - estandarizar trabaja como "Sí" o "No".
-#
-# Pistas:
-# - str_squish()
-# - str_to_title()
-# - str_to_lower()
-# - case_when()
-
-unique(base$nombre)
-
-# mutate() modifica o crea columnas.
-# recode() reemplaza valores específicos por otros valores.
-
 base <- base %>%
   mutate(
+    nombre = str_squish(nombre),
     nombre = recode(
       nombre,
-      " Ana María López " = "Ana María López",
-      "JOSE MUÑOZ"        = "José Muñoz",
-      "Lucía Pérez"       = "Lucía Pérez",
-      "Andrés Niño"       = "Andrés Niño",
-      "María José Gómez"  = "María José Gómez",
-      "Camilo Rojas"      = "Camilo Rojas",
-      "Sofía León"        = "Sofía León"
+      "Ana María López" = "Ana María López",
+      "JOSE MUÑOZ"      = "José Muñoz",
+      "Lucía Pérez"     = "Lucía Pérez",
+      "Andrés Niño"     = "Andrés Niño",
+      "María José Gómez"= "María José Gómez",
+      "Camilo Rojas"    = "Camilo Rojas",
+      "Sofía León"      = "Sofía León"
     )
   )
 
 
 # 3. Corregir las ciudades -----------------------------------------------------
 
-unique(base$ciudad)
-
 base <- base %>%
   mutate(
+    ciudad = str_squish(ciudad),
     ciudad = recode(
       ciudad,
-      "Bogotá "     = "Bogotá",
+      "Bogotá"      = "Bogotá",
       "medellín"    = "Medellín",
       "CALI"        = "Cali",
       "Barranquilla"= "Barranquilla",
-      " bogotá"     = "Bogotá",
+      "bogotá"      = "Bogotá",
       "Cartagena"   = "Cartagena",
       "Pereira"     = "Pereira"
     )
@@ -119,12 +74,9 @@ base <- base %>%
 
 # 4. Corregir las fechas -------------------------------------------------------
 
-unique(base$fecha_encuesta)
-
-# Primero, todas las fechas deben quedar escritas como AAAA-MM-DD.
-
 base <- base %>%
   mutate(
+    fecha_encuesta = str_squish(fecha_encuesta),
     fecha_encuesta = recode(
       fecha_encuesta,
       "03/08/2026"    = "2026-08-03",
@@ -134,29 +86,16 @@ base <- base %>%
       "2026/08/07"    = "2026-08-07",
       "08.08.2026"    = "2026-08-08",
       "08/13/2026"    = "2026-08-13"
-    )
-  )
-
-# Después, convierta la columna de texto al tipo fecha.
-
-base <- base %>%
-  mutate(
-    fecha_encuesta = as.Date(
-      fecha_encuesta,
-      format = "%Y-%m-%d"
-    )
+    ),
+    fecha_encuesta = as.Date(fecha_encuesta, format = "%Y-%m-%d")
   )
 
 
 # 5. Corregir el ingreso mensual ----------------------------------------------
 
-unique(base$ingreso_mensual)
-
-# Quite manualmente los separadores de miles.
-# Use punto únicamente para separar los decimales.
-
 base <- base %>%
   mutate(
+    ingreso_mensual = str_squish(ingreso_mensual),
     ingreso_mensual = recode(
       ingreso_mensual,
       "1.250.000,50" = "1250000.50",
@@ -165,25 +104,16 @@ base <- base %>%
       "875.500,00"   = "875500.00",
       "1 050 000,25" = "1050000.25",
       "725000"       = "725000.00"
-    )
-  )
-
-# Convertir la columna de texto a número.
-
-base <- base %>%
-  mutate(
+    ),
     ingreso_mensual = as.numeric(ingreso_mensual)
   )
 
 
 # 6. Corregir la nota promedio -------------------------------------------------
 
-unique(base$nota_promedio)
-
-# Todas las notas deben usar punto como separador decimal.
-
 base <- base %>%
   mutate(
+    nota_promedio = str_squish(nota_promedio),
     nota_promedio = recode(
       nota_promedio,
       "4,2" = "4.2",
@@ -192,40 +122,24 @@ base <- base %>%
       "3,5" = "3.5",
       "4.5" = "4.5",
       "4,1" = "4.1"
-    )
-  )
-
-# Convertir la columna de texto a número.
-
-base <- base %>%
-  mutate(
+    ),
     nota_promedio = as.numeric(nota_promedio)
   )
 
 
 # 7. Corregir la variable trabaja ---------------------------------------------
 
-unique(base$trabaja)
-
-# Todos los valores deben quedar exactamente como "Sí" o "No".
-
 base <- base %>%
   mutate(
-    # Primero quitamos espacios raros al inicio y al final
     trabaja = str_squish(trabaja),
-    
-    # Luego recodificamos todas las variantes posibles
     trabaja = recode(
       trabaja,
-      "Sí"    = "Sí",
-      "S\xed" = "Sí",
-      "si"    = "Sí",
-      "sí"    = "Sí",
-      "s..."  = "Sí",
-      "No"    = "No",
-      "NO"    = "No",
-      "no"    = "No",
-      .default = "Sí"  # Asegura que cualquier variante extra con tilde rara quede como Sí
+      "Sí" = "Sí",
+      "si" = "Sí",
+      "sí" = "Sí",
+      "No" = "No",
+      "NO" = "No",
+      "no" = "No"
     )
   )
 
@@ -246,10 +160,6 @@ summary(base)
 
 
 # 10. Comprobaciones automáticas ----------------------------------------------
-#
-# Estas líneas fueron preparadas por el profesor.
-# No es necesario modificarlas.
-# Si el trabajo está completo, se ejecutarán sin mostrar errores.
 
 stopifnot(nrow(base) == 7)
 stopifnot(length(unique(base$id)) == 7)
@@ -265,7 +175,7 @@ stopifnot(all(na.omit(base$trabaja) %in% c("Sí", "No")))
 
 dir.create(dirname(ruta_salida), showWarnings = FALSE)
 
-write_csv(
+write_excel_csv(
   base,
   ruta_salida,
   na = ""
