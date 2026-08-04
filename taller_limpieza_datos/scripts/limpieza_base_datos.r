@@ -14,8 +14,8 @@
 # install.packages("tidyverse")
 library(tidyverse)
 
-ruta_entrada <- "../datos/base_sucia_encuesta.txt"
-ruta_salida  <- "../resultados/base_limpia.csv"
+ruta_entrada <- "datos/base_sucia_encuesta.txt"
+ruta_salida  <- "resultados/base_limpia.csv"
 
 
 # 0. Inspección inicial --------------------------------------------------------
@@ -211,14 +211,21 @@ unique(base$trabaja)
 
 base <- base %>%
   mutate(
+    # Primero quitamos espacios raros al inicio y al final
+    trabaja = str_squish(trabaja),
+    
+    # Luego recodificamos todas las variantes posibles
     trabaja = recode(
       trabaja,
-      "Sí"  = "Sí",
-      "si " = "Sí",
-      "sí"  = "Sí",
-      "No"  = "No",
-      "NO"  = "No",
-      "no"  = "No"
+      "Sí"    = "Sí",
+      "S\xed" = "Sí",
+      "si"    = "Sí",
+      "sí"    = "Sí",
+      "s..."  = "Sí",
+      "No"    = "No",
+      "NO"    = "No",
+      "no"    = "No",
+      .default = "Sí"  # Asegura que cualquier variante extra con tilde rara quede como Sí
     )
   )
 
@@ -265,3 +272,4 @@ write_csv(
 )
 
 print(paste("La base limpia fue guardada en", ruta_salida))
+
